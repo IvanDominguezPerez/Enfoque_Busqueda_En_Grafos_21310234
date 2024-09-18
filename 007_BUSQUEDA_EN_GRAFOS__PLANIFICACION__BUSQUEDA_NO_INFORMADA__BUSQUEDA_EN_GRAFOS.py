@@ -1,58 +1,80 @@
-from collections import deque
+#Practica: 007_BUSQUEDA_EN_GRAFOS__PLANIFICACION__BUSQUEDA_NO_INFORMADA__BUSQUEDA_EN_GRAFOS
+#Alumno: IVAN_DOMINGUEZ
+#Registro: 21310234
+#Grupo: 7F1
 
-class Grafo:
-    def __init__(self):
-        self.grafo = {}
+from collections import deque  # Importamos deque para manejar la cola de la búsqueda en anchura
 
-    def agregar_arista(self, u, v):
-        if u not in self.grafo:
-            self.grafo[u] = []  # Crea una lista vacía para los vecinos del nodo u si no existe
-        self.grafo[u].append(v)  # Agrega una arista al grafo desde el nodo u al nodo v
+# Definimos un grafo simple que representa una ciudad
+# Cada nodo representa una ubicación y las conexiones (aristas) representan las rutas entre las ubicaciones
+grafo_ciudad = {
+    'Casa': ['Supermercado', 'Parque', 'Cafetería'],
+    'Supermercado': ['Casa', 'Gimnasio'],
+    'Parque': ['Casa', 'Cafetería', 'Museo'],
+    'Cafetería': ['Casa', 'Parque', 'Teatro'],
+    'Gimnasio': ['Supermercado', 'Hospital'],
+    'Museo': ['Parque', 'Hospital'],
+    'Teatro': ['Cafetería'],
+    'Hospital': ['Gimnasio', 'Museo']
+}
 
-    def bfs(self, inicio, objetivo):
-        cola = deque([inicio])  # Cola para realizar BFS desde el nodo inicial
-        visitado = set([inicio])  # Conjunto para almacenar los nodos visitados durante la búsqueda
-        padres = {inicio: None}  # Diccionario para almacenar los padres de cada nodo en el camino óptimo
+# Función que implementa la búsqueda en anchura (BFS)
+def busqueda_en_anchura(grafo, inicio, objetivo):
+    # Cola para almacenar los nodos a explorar. Usamos deque para optimizar las operaciones de cola.
+    cola = deque([inicio])  # Iniciamos con el nodo de inicio
+    # Diccionario para llevar registro de los nodos visitados y sus predecesores (para reconstruir el camino)
+    visitados = {inicio: None}
+    
+    # Mientras la cola no esté vacía, seguimos explorando
+    while cola:
+        nodo_actual = cola.popleft()  # Extraemos el primer nodo de la cola (FIFO)
+        
+        # Si encontramos el nodo objetivo, detenemos la búsqueda
+        if nodo_actual == objetivo:
+            return reconstruir_camino(visitados, inicio, objetivo)  # Llamamos a una función para reconstruir el camino
+        
+        # Exploramos los nodos vecinos (conectados) al nodo actual
+        for vecino in grafo[nodo_actual]:
+            if vecino not in visitados:  # Solo visitamos nodos no visitados
+                visitados[vecino] = nodo_actual  # Guardamos de dónde venimos (predecesor)
+                cola.append(vecino)  # Añadimos el vecino a la cola para explorarlo más adelante
 
-        while cola:
-            nodo_actual = cola.popleft()  # Obtiene el nodo actual de la cola
-            if nodo_actual == objetivo:  # Si se alcanza el nodo objetivo, termina la búsqueda
-                break
+    return None  # Si no encontramos el objetivo, devolvemos None
 
-            for vecino in self.grafo.get(nodo_actual, []):  # Recorre los vecinos del nodo actual
-                if vecino not in visitado:  # Si el vecino no ha sido visitado
-                    visitado.add(vecino)  # Marca el vecino como visitado
-                    padres[vecino] = nodo_actual  # Almacena el nodo actual como el padre del vecino
-                    cola.append(vecino)  # Agrega el vecino a la cola
+# Función para reconstruir el camino desde el inicio hasta el objetivo
+def reconstruir_camino(visitados, inicio, objetivo):
+    camino = []  # Lista para almacenar el camino
+    nodo_actual = objetivo  # Empezamos desde el objetivo
+    
+    # Retrocedemos a través del diccionario de predecesores hasta llegar al inicio
+    while nodo_actual is not None:
+        camino.append(nodo_actual)
+        nodo_actual = visitados[nodo_actual]  # Nos movemos al nodo predecesor
+    
+    # Invertimos el camino, ya que lo reconstruimos desde el objetivo al inicio
+    camino.reverse()
+    return camino
 
-        if objetivo not in padres:  # Si no se encontró un camino al objetivo
-            return None
+# Función principal
+if __name__ == "__main__":
+    inicio = 'Casa'  # Definimos el nodo de inicio
+    objetivo = 'Hospital'  # Definimos el nodo objetivo
+    
+    # Llamamos a la función de búsqueda en anchura
+    camino = busqueda_en_anchura(grafo_ciudad, inicio, objetivo)
+    
+    # Imprimimos el resultado
+    if camino:
+        print(f'Camino desde {inicio} hasta {objetivo}: {camino}')
+    else:
+        print(f'No se encontró un camino desde {inicio} hasta {objetivo}.')
 
-        # Reconstruye el camino óptimo retrocediendo desde el nodo objetivo hasta el inicio
-        camino_optimo = []
-        nodo = objetivo
-        while nodo is not None:
-            camino_optimo.append(nodo)
-            nodo = padres[nodo]
-        camino_optimo.reverse()  # Invierte el camino para que esté en orden desde el inicio
-        return camino_optimo
+#El algoritmo de Búsqueda en Anchura es un algoritmo de búsqueda no informada que explora
+#todos los nodos vecinos a una profundidad fija antes de moverse a la siguiente. Es útil cuando
+#buscamos el camino más corto en términos de número de pasos, pero sin tener información sobre
+#las distancias o costos. En este ejemplo, aplicamos BFS para encontrar el camino más corto entre dos
+#ubicaciones en una ciudad representada por un grafo.
 
-# Ejemplo de uso
-g = Grafo()
-g.agregar_arista(0, 1)
-g.agregar_arista(0, 2)
-g.agregar_arista(1, 3)
-g.agregar_arista(2, 4)
-g.agregar_arista(2, 5)
-g.agregar_arista(3, 6)
-g.agregar_arista(3, 7)
-
-inicio = 0
-objetivo = 7
-
-camino_optimo = g.bfs(inicio, objetivo)
-
-if camino_optimo:
-    print("Camino óptimo encontrado:", camino_optimo)
-else:
-    print("No se encontró un camino desde el nodo inicial al objetivo")
+#Este enfoque es aplicable a la vida cotidiana en situaciones como la búsqueda de rutas en mapas,
+#planificación de rutas de transporte, o cualquier otro problema que pueda modelarse como un
+#grafo.
